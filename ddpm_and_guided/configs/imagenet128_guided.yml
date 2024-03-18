@@ -9,6 +9,7 @@ data:
     rescaled: true
     num_workers: 32
     num_classes: 1000
+    subset: "valid"
 
 model:
     model_type: "guided_diffusion"
@@ -34,7 +35,7 @@ model:
     use_new_attention_order: false
     var_type: fixedlarge
     ema: false
-    ckpt_dir: "your_local_model_path"
+    ckpt_dir: "/home/mjazbec/BayesDiff/models/128x128_diffusion.pt"
 
 classifier:
     ckpt_dir: "~/ddpm_ckpt/imagenet128/128x128_classifier.pt"

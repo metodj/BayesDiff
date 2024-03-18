@@ -230,6 +230,8 @@ def main():
     device = f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device)
     torch.backends.cudnn.benchmark = True
+
+    
     
 
     # set random seed

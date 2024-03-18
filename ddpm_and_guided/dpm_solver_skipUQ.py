@@ -24,6 +24,8 @@ from torchvision.utils import make_grid
 import logging
 import time
 
+from torchsummary import summary
+
 def conditioned_exp_iteration(exp_xt, ns, s, t, pre_wuq, exp_s1=None, mc_eps_exp_s1= None):
 
     if pre_wuq == True:
@@ -192,6 +194,9 @@ def dict2namespace(config):
 def main():
     args, config = parse_args_and_config()
 
+    print(torch.cuda.is_available())
+    print(config)
+
     device = f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device)
     torch.backends.cudnn.benchmark = True
@@ -237,6 +242,7 @@ def main():
         model = Model(diffusion.config)
 
     model = model.to(device)
+    # summary(model, input_size=(3, 128, 128), timesteps=[20.])
     map_location = {'cuda:%d' % 0: 'cuda:%d' % args.device}
 
     if "ckpt_dir" in diffusion.config.model.__dict__.keys():
@@ -274,6 +280,7 @@ def main():
         train_dataset= imagenet_dataset(args = args, config = diffusion.config)
         train_dataloader= torch.utils.data.DataLoader(train_dataset, batch_size=args.train_la_batch_size, shuffle=True)
         custom_model = CustomModel(model, train_dataloader, args, diffusion.config) 
+    
 #########   get t sequence (note that t is different from timestep)  ##########
     def get_time_steps(skip_type, t_T, t_0, N, device):
         if skip_type == 'logSNR':
@@ -460,6 +467,7 @@ def main():
         for j in range(n_rounds):
             var.append(var_sum[:, j])
         var = torch.concat(var, dim=0)
+        print(var)
         sorted_var, sorted_indices = torch.sort(var, descending=True)
         reordered_sample_x = torch.index_select(sample_x, dim=0, index=sorted_indices.int())
         grid_sample_x = make_grid(reordered_sample_x, nrow=12, padding=1)

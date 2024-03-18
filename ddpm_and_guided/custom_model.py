@@ -24,6 +24,12 @@ class CustomModel(nn.Module):
             self.fit(dataloader)
         else:
             self.conv_out = diff_model.out[2]
+            # print(type(diff_model))
+            # print(type(diff_model.out[2]))
+            # print(self.conv_out.weight.shape)
+            # print(self.conv_out.bias.shape)
+            # print(self.conv_out.groups)
+            
             self.copied_cov_out = copy.deepcopy(self.conv_out)
 
             self.feature_extractor = diff_model
@@ -90,6 +96,8 @@ class CustomModel(nn.Module):
             self.conv_out_la.model.eval()
             self.conv_out_la.mean = parameters_to_vector(self.conv_out_la.model.parameters()).detach()
 
+            # print(len(self.conv_out_la.mean ))
+
             (X,labels,t), _ = next(iter(train_loader))
             model_kwargs = {"y": labels.to(self.conv_out_la._device)}
             with torch.no_grad():
@@ -100,13 +108,19 @@ class CustomModel(nn.Module):
             N = len(train_loader.dataset)
             i=0
             for (X, labels, t), y in train_loader:
-                print(i)
+                # print(i)
+                # print(X.shape, t.shape, y.shape)
+                # # print(t)
+                # print(X.max(), X.min(), y.max(), y.min())
+                # print(X.mean(), X.std(), y.mean(), y.std())
                 self.conv_out_la.model.zero_grad()
                 
                 X, labels, t, y = X.to(self.conv_out_la._device), labels.to(self.conv_out_la._device), t.to(self.conv_out_la._device), y.to(self.conv_out_la._device)
                 model_kwargs = {"y": labels}
                 with torch.no_grad():
                     X = self.feature_extractor(X, t, **model_kwargs)
+                # print(X.shape)
+                # print(self.conv_out(X).shape)
                 loss_batch, H_batch = self.conv_out_la._curv_closure(X, y, config, N)
                 self.conv_out_la.loss += loss_batch
                 self.conv_out_la.H += H_batch

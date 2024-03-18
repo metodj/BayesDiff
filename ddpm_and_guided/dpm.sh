@@ -1,12 +1,12 @@
 # imagenet128
-DEVICES="7"
+DEVICES="0"
 data="imagenet128_guided"
 steps="50"
 mc_size="10"
 sample_batch_size="16"
-total_n_sample="96"
+total_n_sample="16"
 # the size of dataset used for Laplace approximation: size_of_total_dataset//train_la_data_size
-train_la_data_size="200"
+train_la_data_size="8"
 fixed_class="10"
 DIS="logSNR"
 seed=1234

@@ -13,6 +13,8 @@ from datasets.lsun import LSUN
 from torch.utils.data import Subset
 import random
 
+LOCAL_IMAGE_PATH = "/nvmestore/mjazbec/imagenet"
+
 def logit_transform(image, lam=1e-6):
     image = lam + (1 - 2 * lam) * image
     return torch.log(image) - torch.log1p(-image)
@@ -357,7 +359,7 @@ class imagenet_dataset(torch.utils.data.Dataset):
     def __init__(self, args, config):
 
         super().__init__()
-        self.image_path = 'your_local_image_path/train'
+        self.image_path = f'{LOCAL_IMAGE_PATH}/{config.data.subset}'
         self.paths, self.classes, _ = list_image_files_and_class_recursively(self.image_path)
         self.image_size = config.data.image_size
         self.config = config
