@@ -334,6 +334,7 @@ def main():
     n_rounds = total_n_samples // args.sample_batch_size
     var_sum = torch.zeros((args.sample_batch_size, n_rounds)).to(device)
     sample_x =[]
+    var_x = []
     img_id = 1000000
     with torch.no_grad():
         for loop in tqdm.tqdm(
@@ -458,20 +459,33 @@ def main():
                 #     tvu.save_image(torch.sqrt(var_xt_next[i]), f'{exp_dir}trajectory/dev/timestep_{timestep}_deviation_{i+loop*args.sample_batch_size}.png')
                 #     tvu.save_image(inverse_data_transform(diffusion.config, xt_next[i]), f'{exp_dir}trajectory/sam/timestep_{timestep}_sample_{i+loop*args.sample_batch_size}.png')
                 
+            # TODO: store per pixel variance
             var_sum[:, loop] = var_xt_next.sum(dim=(1,2,3))    
             x = inverse_data_transform(config, xt_next)
             sample_x.append(x)
+            var_x.append(var_xt_next)
 
         sample_x = torch.concat(sample_x, dim=0)
+        var_x = torch.concat(var_x, dim=0)
+        print(var_x[0].min(), var_x[0].max())
+        print(sample_x.shape, var_x.shape)
         var = []
         for j in range(n_rounds):
             var.append(var_sum[:, j])
         var = torch.concat(var, dim=0)
         print(var)
         sorted_var, sorted_indices = torch.sort(var, descending=True)
+        print(sorted_var)
         reordered_sample_x = torch.index_select(sample_x, dim=0, index=sorted_indices.int())
         grid_sample_x = make_grid(reordered_sample_x, nrow=12, padding=1)
         tvu.save_image(grid_sample_x.cpu().float(), os.path.join(exp_dir, "sorted_sample.png"))
+
+        # average variance across axis=1 but keep dim
+        var_x = var_x.mean(dim=1, keepdim=True)
+
+        reordered_var_x = torch.index_select(var_x, dim=0, index=sorted_indices.int())
+        grid_var_x = make_grid(reordered_var_x, nrow=12, padding=1, normalize=True)
+        tvu.save_image(grid_var_x.cpu().float(), os.path.join(exp_dir, "sorted_var.png"))
 
 if __name__ == "__main__":
     main()
